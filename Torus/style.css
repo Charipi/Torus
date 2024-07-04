@@ -1,0 +1,17 @@
+body {
+    background-color: black;
+}
+
+div {
+    height: 768px;
+    line-height: 768px;
+    text-align: center;
+}
+
+span {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1rem;
+    font-size: 1rem;
+    color: blue;
+}
