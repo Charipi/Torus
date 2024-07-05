@@ -1,11 +1,9 @@
 // TO DO:
 // rotating donut - becomes thin line then widens back out
-// make 0, 0 the center instead of outer, outer
-// fix negatives for offset and order of brightness list
 // ascii only?
 
-const brightness = ["&#9648", "&#9703", "$", "|", ";",  "&nbsp"]; // bright to dim
-const widths     = [1.000000, 0.820000, 0.5, 0.2, 0.277, 0.24];   // relative widths of these characters
+const brightness = ["&nbsp", ";",  "|", "$", "&#9703", "&#9648"]; // dim to bright
+const widths     = [0.24000, 0.277, 0.2, 0.5, 0.82000, 1.000000]; // relative widths of these characters
 
 let torus = document.getElementById("torus");
 donut(0, 0, 15, 25);
@@ -34,72 +32,47 @@ function donut(theta, phi, inner, outer) {
 
     // Note that center of torus is at (outer, outer), +x is right on screen, +y is up, and +z is out from screen
     let string = "";
-    let x, y = 0;
-    while (y < outer * 2) {
-        while(x < outer * 2) {
+    let x, y = -outer;
+    while (y < outer) {
+        while(x < outer) {
             // Get the radius to this point and check that it's between radii
-            const radius = dist(x, y, outer, outer);
+            const radius = dist(x, y, 0, 0);
             if (radius < inner || radius > outer) {
-                string += brightness[brightness.length - 1];
-                x += widths[brightness.length - 1];
+                string += brightness[0];
+                x += widths[0];
             }
             else {
                 // Offset is distance from this point to the middle between inner and outer radii
-                const offset = -((outer + inner)/2 - radius);
+                const offset = radius - (outer + inner)/2;
                 const z = Math.sqrt(((outer - inner)/2)*((outer - inner)/2) - offset*offset);
                 
                 // relX, Y, Z measure from center of slice - useful in measuring the angle this point faces
                 const scaleFactor = offset / radius;
-                const relX = (x - outer) * scaleFactor; // subtracting outer to get (0, 0) to be center
-                const relY = (y - outer) * scaleFactor;
+                const relX = x * scaleFactor;
+                const relY = y * scaleFactor;
                 const relZ = z; // center of slice is at z=0, so no changes
 
                 // dot product / norms = how intense light is
                 const dotProduct = sourceX*relX + sourceY*relY + sourceZ*relZ;
                 let intensity = dotProduct / Math.sqrt(relX*relX + relY*relY + relZ*relZ); // source vector is unit, so its norm is not divided
-                let element = -1 * intensity;
 
-                // MAP INTENSITY TO CHAR (-1 to 1 --> 0 - len)
-                element += 1; // 0 to 2
-                element /= 2; // 0 to 1
-                const len = brightness.length - 1; // exclude pure black
-                element *= len; // 0 to len
+                // Map intensity to a character (-1 to 1 --> 1 to len-1)
+                intensity = (intensity + 1) / 2 * (brightness.length - 2) + 1;
 
-                const dec = element - Math.floor(element);
-                element = Math.floor(element) + ((Math.random() < dec*dec) ? 0 : 1); // instead of rounding, uses a probabalistic blend
-                string += brightness[element];
-                x += widths[element];
+                const dec = intensity - Math.floor(intensity);
+                intensity = Math.floor(intensity) + ((Math.random() < dec*dec*dec*dec) ? 1 : 0); // instead of rounding, uses a probabalistic blend
+                string += brightness[intensity];
+                x += widths[intensity];
             }
         }
 
         // Moving to beginning of next row of text
-        x = 0;
+        x = -outer;
         y++;
         string += "<br>";
     }
 
     torus.innerHTML = string;
-}
-
-function circle(radius) {
-    let string = "";
-    let x, y = 0;
-    while (y < radius * 2) {
-        while(x < radius * 2) {
-            const distance = dist(x, y, radius, radius);
-            let char = Math.round(distance / (radius / 5));
-            if (char > 5) {
-                char = 5;
-            }
-            string += brightness[char];
-            x += widths[char];
-        }
-        x = 0;
-        y++;
-        string += "<br>";
-    }
-
-    return string;
 }
 
 function testGradient(chars, sizes) {
